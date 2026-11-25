@@ -8,7 +8,7 @@ Department of Computer Science and IT, University of Southern Punjab, Multan.
 Team: Anum Bibi (BSIT-023R22P-05), Sidra (BSIT-023R22P-22), Narjis Fatima (BSIT-023R22P-25)
 Supervisor: Sir Zohair Haider
 
-========================================
+
 OVERVIEW
 ========================================
 Dental caries affects approximately 2.5 billion people globally, and in Pakistan, prevalence reaches 97.7% among school adolescents. Yet no widely accessible screening tool exists for patients or small clinics.
