@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+
+# Virtual environment
+venv/
+env/
+
+# Django
+*.log
+db.sqlite3
+database/*.db
+
+# Media uploads
+media/uploads/
+media/patient_docs/
+media/reports/
+media/runs/
+
+# Model weights (too large)
+models/*.pt
+
+# Secrets
+.env
+*.key
