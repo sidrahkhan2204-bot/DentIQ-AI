@@ -1,0 +1,147 @@
+{% extends 'base.html' %}
+{% block title %}Admin Dashboard — DentIQ{% endblock %}
+{% block page_title %}Admin Panel{% endblock %}
+
+{% block content %}
+
+<p style="color:var(--text-secondary); margin:0 0 20px 0;">
+    System overview and management.
+</p>
+
+<!-- PRIMARY STATS ROW -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="custom-card text-center">
+            <i class="fas fa-users" style="font-size:2rem; color:var(--accent);"></i>
+            <div style="font-size:2.2rem; font-weight:800; margin-top:8px;">
+                {{ user_count }}
+            </div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">
+                Registered Users
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="custom-card text-center">
+            <i class="fas fa-user-md" style="font-size:2rem; color:var(--success);"></i>
+            <div style="font-size:2.2rem; font-weight:800; margin-top:8px;">
+                {{ doctor_count }}
+            </div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">
+                Doctors
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="custom-card text-center">
+            <i class="fas fa-calendar-check" style="font-size:2rem; color:var(--warning);"></i>
+            <div style="font-size:2.2rem; font-weight:800; margin-top:8px;">
+                {{ appt_count }}
+            </div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">
+                Appointments
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- SECONDARY STATS ROW -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="custom-card text-center">
+            <i class="fas fa-id-card" style="font-size:1.6rem; color:var(--accent);"></i>
+            <div style="font-size:1.8rem; font-weight:800; margin-top:6px;">
+                {{ patient_count }}
+            </div>
+            <div style="color:var(--text-secondary); font-size:0.85rem;">
+                Patient Profiles
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="custom-card text-center">
+            <i class="fas fa-microscope" style="font-size:1.6rem; color:var(--success);"></i>
+            <div style="font-size:1.8rem; font-weight:800; margin-top:6px;">
+                {{ scan_count }}
+            </div>
+            <div style="color:var(--text-secondary); font-size:0.85rem;">
+                AI Scans
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="custom-card text-center">
+            <i class="fas fa-star" style="font-size:1.6rem; color:#D97706;"></i>
+            <div style="font-size:1.8rem; font-weight:800; margin-top:6px;">
+                {{ review_count|default:0 }}
+            </div>
+            <div style="color:var(--text-secondary); font-size:0.85rem;">
+                Reviews
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="custom-card text-center">
+            <i class="fas fa-clipboard-list" style="font-size:1.6rem; color:var(--danger);"></i>
+            <div style="font-size:1.8rem; font-weight:800; margin-top:6px;">
+                {{ audit_count|default:0 }}
+            </div>
+            <div style="color:var(--text-secondary); font-size:0.85rem;">
+                Audit Entries
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- QUICK ACTIONS -->
+<div class="custom-card mb-4">
+    <h5 style="font-weight:700; margin-bottom:16px;">
+        <i class="fas fa-tools"></i> Quick Actions
+    </h5>
+    <div class="row g-3">
+        <div class="col-md-6 col-lg-3">
+            <a href="{% url 'admin_users' %}" class="btn-accent" style="width:100%; text-align:center;">
+                <i class="fas fa-users-cog"></i> Manage Users
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a href="{% url 'admin_doctors' %}" class="btn-accent" style="width:100%; text-align:center; background:var(--success);">
+                <i class="fas fa-user-md"></i> Manage Doctors
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a href="{% url 'admin_monitoring' %}" class="btn-accent" style="width:100%; text-align:center; background:#D97706;">
+                <i class="fas fa-chart-line"></i> Model Monitoring
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a href="{% url 'admin_audit_log' %}" class="btn-accent" style="width:100%; text-align:center; background:var(--danger);">
+                <i class="fas fa-clipboard-list"></i> Audit Log
+            </a>
+        </div>
+    </div>
+    <div class="row g-3 mt-1">
+        <div class="col-md-6 col-lg-3">
+            <a href="{% url 'admin_scans' %}" class="btn-outline" style="width:100%; text-align:center;">
+                <i class="fas fa-list"></i> All Scans
+            </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+            <a href="/admin/" class="btn-outline" style="width:100%; text-align:center;">
+                <i class="fas fa-database"></i> Django Admin
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- INFO BANNER -->
+<div class="disclaimer-banner">
+    <i class="fas fa-info-circle"></i>
+    <strong>About this panel:</strong> DentIQ Admin Panel is the primary interface for system
+    management. Use <strong>Manage Users</strong>, <strong>Manage Doctors</strong>,
+    <strong>Model Monitoring</strong>, and <strong>Audit Log</strong> for day-to-day operations.
+    For advanced CRUD on any data, use the <a href="/admin/" style="color:#0891B2; font-weight:600;">Django Admin</a>
+    (requires a superuser account).
+</div>
+
+{% endblock %}

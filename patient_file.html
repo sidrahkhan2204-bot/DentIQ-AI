@@ -1,0 +1,219 @@
+{% extends 'base.html' %}
+{% block title %}{{ profile.patient_id }} — DentIQ{% endblock %}
+{% block page_title %}Patient File — {{ profile.patient_id }}{% endblock %}
+
+{% block content %}
+
+<!-- HEADER -->
+<div class="custom-card mb-3">
+    <div class="d-flex align-items-center gap-3 flex-wrap">
+        <div class="user-avatar" style="width:64px; height:64px; font-size:1.5rem;">
+            {{ patient_user.name|first|upper }}
+        </div>
+        <div style="flex:1; min-width:200px;">
+            <div style="font-weight:700; font-size:1.2rem;">{{ patient_user.name }}</div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">{{ patient_user.email }}</div>
+            <div class="role-badge" style="margin-top:6px;">{{ profile.patient_id }}</div>
+        </div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'add_visit' profile.patient_id %}" class="btn-accent" style="font-size:0.9rem;">
+                <i class="fas fa-notes-medical"></i> Add Visit
+            </a>
+            <a href="{% url 'upload_patient_document' profile.patient_id %}" class="btn-outline" style="font-size:0.9rem;">
+                <i class="fas fa-upload"></i> Upload Document
+            </a>
+            <a href="{% url 'issue_certificate' profile.patient_id %}" class="btn-outline" style="font-size:0.9rem;">
+                <i class="fas fa-certificate"></i> Issue Certificate
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+
+    <!-- DEMOGRAPHICS -->
+    <div class="col-md-6">
+        <div class="custom-card h-100">
+            <h6 style="font-weight:700; margin-bottom:12px;"><i class="fas fa-id-card"></i> Demographics</h6>
+            <table class="table table-sm mb-0">
+                <tr><td style="color:var(--text-secondary);">Phone</td><td>{{ profile.phone|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">DOB</td><td>{{ profile.date_of_birth|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Gender</td><td>{{ profile.get_gender_display|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">CNIC</td><td>{{ profile.cnic|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">City</td><td>{{ profile.city|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Address</td><td>{{ profile.address|default:"—" }}</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- MEDICAL -->
+    <div class="col-md-6">
+        <div class="custom-card h-100">
+            <h6 style="font-weight:700; margin-bottom:12px;"><i class="fas fa-notes-medical"></i> Medical History</h6>
+            <table class="table table-sm mb-0">
+                <tr><td style="color:var(--text-secondary);">Chronic</td><td>{{ profile.chronic_conditions|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Allergies</td><td>{{ profile.allergies|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Medications</td><td>{{ profile.current_medications|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Surgeries</td><td>{{ profile.past_surgeries|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Smoker</td><td>{% if profile.smoker %}Yes{% else %}No{% endif %}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Pregnant</td><td>{% if profile.pregnant %}Yes{% else %}No{% endif %}</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- AI SCANS -->
+    <div class="col-12">
+        <div class="custom-card">
+            <h6 style="font-weight:700; margin-bottom:12px;"><i class="fas fa-microscope"></i> AI Scans ({{ scans|length }})</h6>
+            {% if scans %}
+            <div class="table-responsive">
+                <table class="table table-sm align-middle mb-0">
+                    <thead>
+                        <tr style="border-bottom:1px solid var(--border);">
+                            <th>Date</th><th>Detected</th><th>Confidence</th><th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in scans %}
+                        <tr>
+                            <td style="font-size:0.9rem;">{{ s.timestamp|date:"M d, Y H:i" }}</td>
+                            <td style="font-size:0.9rem;">{{ s.detected_diseases }}</td>
+                            <td style="font-size:0.85rem; color:var(--text-secondary);">{{ s.confidence_scores|truncatechars:40 }}</td>
+                            <td><a href="{% url 'view_scan' s.id %}" class="btn-outline" style="font-size:0.8rem; padding:3px 12px;">View</a></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p style="color:var(--text-secondary); margin:0;">No scans yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div class="col-12">
+        <div class="custom-card">
+            <h6 style="font-weight:700; margin-bottom:12px;"><i class="fas fa-calendar-alt"></i> Appointments ({{ appointments|length }})</h6>
+            {% if appointments %}
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Date</th><th>Time</th><th>Doctor</th><th>Status</th></tr></thead>
+                <tbody>
+                    {% for a in appointments %}
+                    <tr>
+                        <td>{{ a.appointment_date }}</td>
+                        <td>{{ a.appointment_time|default:"—" }}</td>
+                        <td>{{ a.doctor.name }}</td>
+                        <td><span class="badge bg-secondary">{{ a.status }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:var(--text-secondary); margin:0;">No appointments.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- VISITS -->
+    <div class="col-12">
+        <div class="custom-card">
+            <h6 style="font-weight:700; margin-bottom:12px;"><i class="fas fa-clipboard-list"></i> Visit History ({{ visits|length }})</h6>
+            {% if visits %}
+                {% for v in visits %}
+                <div style="border-left:3px solid var(--accent); padding:10px 16px; margin-bottom:16px; background:var(--bg-tertiary); border-radius:0 8px 8px 0;">
+                    <div class="d-flex justify-content-between flex-wrap gap-2">
+                        <strong>{{ v.visit_date|date:"M d, Y — H:i" }}</strong>
+                        <span style="color:var(--text-secondary); font-size:0.85rem;">
+                            Dr. {{ v.doctor.name|default:"—" }}
+                        </span>
+                    </div>
+                    {% if v.reason %}<div style="margin-top:6px;"><strong>Reason:</strong> {{ v.reason }}</div>{% endif %}
+                    {% if v.chief_complaint %}<div><strong>Complaint:</strong> {{ v.chief_complaint }}</div>{% endif %}
+                    {% if v.examination_findings %}<div><strong>Findings:</strong> {{ v.examination_findings }}</div>{% endif %}
+                    {% if v.diagnosis %}<div><strong>Diagnosis:</strong> {{ v.diagnosis }}</div>{% endif %}
+                    {% if v.treatment_plan %}<div><strong>Plan:</strong> {{ v.treatment_plan }}</div>{% endif %}
+                    {% if v.notes %}<div style="color:var(--text-secondary);"><strong>Notes:</strong> {{ v.notes }}</div>{% endif %}
+                    {% if v.follow_up_date %}<div><strong>Follow-up:</strong> {{ v.follow_up_date }}</div>{% endif %}
+
+                    {% with prescs=prescriptions_by_visit|default_if_none:'' %}{% endwith %}
+
+                    {% if v.prescriptions.all %}
+                    <div style="margin-top:8px;">
+                        <strong>Prescriptions:</strong>
+                        <ul style="margin:4px 0 0 0; padding-left:20px;">
+                            {% for p in v.prescriptions.all %}
+                            <li>{{ p.medication }} — {{ p.dose }} · {{ p.frequency }} · {{ p.duration }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                    <div style="margin-top:8px;">
+                        <a href="{% url 'add_prescription' v.id %}" class="btn-outline" style="font-size:0.8rem; padding:3px 12px;">
+                            <i class="fas fa-plus"></i> Add Prescription
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+            <p style="color:var(--text-secondary); margin:0;">No visits recorded.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- DOCUMENTS -->
+    <div class="col-12">
+        <div class="custom-card">
+            <h6 style="font-weight:700; margin-bottom:12px;"><i class="fas fa-folder"></i> Documents ({{ documents|length }})</h6>
+            {% if documents %}
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Type</th><th>Title</th><th>Uploaded</th><th></th></tr></thead>
+                <tbody>
+                    {% for d in documents %}
+                    <tr>
+                        <td>{{ d.get_doc_type_display }}</td>
+                        <td>{{ d.title }}</td>
+                        <td style="font-size:0.85rem; color:var(--text-secondary);">{{ d.uploaded_at|date:"M d, Y" }}</td>
+                        <td><a href="{{ d.file.url }}" target="_blank" class="btn-outline" style="font-size:0.8rem; padding:3px 12px;">Open</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:var(--text-secondary); margin:0;">No documents.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- CERTIFICATES -->
+    <div class="col-12">
+        <div class="custom-card">
+            <h6 style="font-weight:700; margin-bottom:12px;"><i class="fas fa-certificate"></i> Medical Certificates ({{ certificates|length }})</h6>
+            {% if certificates %}
+            <table class="table table-sm align-middle mb-0">
+                <thead><tr><th>Issued</th><th>Diagnosis</th><th>Valid Until</th><th></th></tr></thead>
+                <tbody>
+                    {% for c in certificates %}
+                    <tr>
+                        <td>{{ c.issued_date|date:"M d, Y" }}</td>
+                        <td>{{ c.diagnosis|truncatechars:60 }}</td>
+                        <td>{{ c.valid_until|default:"—" }}</td>
+                        <td>
+                            <a href="{% url 'download_certificate' c.id %}" class="btn-outline" style="font-size:0.8rem; padding:3px 12px;">
+                                <i class="fas fa-file-pdf"></i> PDF
+                            </a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:var(--text-secondary); margin:0;">No certificates issued.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

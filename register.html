@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register — DentIQ</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --accent: #0891B2;
+            --accent-hover: #0E7490;
+            --text-primary: #0F172A;
+            --text-secondary: #64748B;
+            --border: #E2E8F0;
+        }
+        * { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .register-container {
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(8, 145, 178, 0.12);
+            padding: 40px;
+            max-width: 480px;
+            width: 100%;
+        }
+        .brand-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .brand-header i {
+            font-size: 3rem;
+            color: var(--accent);
+        }
+        .brand-header h1 {
+            font-weight: 800;
+            font-size: 1.8rem;
+            margin: 10px 0 4px;
+        }
+        .brand-header p {
+            color: var(--text-secondary);
+            margin: 0;
+            font-size: 0.95rem;
+        }
+        .role-notice {
+            background: rgba(8, 145, 178, 0.06);
+            border-left: 3px solid var(--accent);
+            padding: 12px 16px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: #0C4A6E;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+        .role-notice i { color: var(--accent); margin-top: 2px; }
+        .form-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+        }
+        .form-control {
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+        .form-control:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(8, 145, 178, 0.1);
+        }
+        .password-wrapper { position: relative; }
+        .password-wrapper .form-control { padding-right: 46px; }
+        .password-toggle {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 4px 6px;
+            font-size: 1rem;
+            transition: color 0.2s;
+        }
+        .password-toggle:hover { color: var(--accent); }
+        .btn-register {
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            padding: 14px;
+            border-radius: 10px;
+            font-weight: 600;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+        .btn-register:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(8, 145, 178, 0.25);
+        }
+        .footer-link {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .footer-link a {
+            color: var(--accent);
+            font-weight: 600;
+            text-decoration: none;
+        }
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="toast-container">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="toast show align-items-center text-white
+                {% if message.tags == 'error' %}bg-danger{% else %}bg-success{% endif %}
+                border-0" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        {% if message.tags == 'error' %}
+                            <i class="fas fa-exclamation-circle"></i>
+                        {% else %}
+                            <i class="fas fa-check-circle"></i>
+                        {% endif %}
+                        {{ message }}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"></button>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div>
+
+<div class="register-container">
+    <div class="brand-header">
+        <i class="fas fa-tooth"></i>
+        <h1>Create Account</h1>
+        <p>Join DentIQ for AI-powered dental screening</p>
+    </div>
+
+    <div class="role-notice">
+        <i class="fas fa-info-circle"></i>
+        <div>
+            <strong>Patient registration only.</strong>
+            Doctors and administrators are added by the clinic.
+            After registration, a doctor must verify your account
+            before you can book appointments.
+        </div>
+    </div>
+
+    <form method="POST" action="{% url 'register' %}">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">Full Name</label>
+            <input type="text" name="name" class="form-control" placeholder="Enter your full name" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Email Address</label>
+            <input type="email" name="email" class="form-control" placeholder="you@example.com" required>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Password</label>
+            <div class="password-wrapper">
+                <input type="password" name="password" id="regPassword" class="form-control" placeholder="Create a password" required>
+                <button type="button" class="password-toggle" onclick="togglePassword('regPassword', this)">
+                    <i class="fas fa-eye"></i>
+                </button>
+            </div>
+        </div>
+
+        <button type="submit" class="btn-register">
+            <i class="fas fa-user-plus"></i> Register as Patient
+        </button>
+    </form>
+
+    <div class="footer-link">
+        Already have an account? <a href="{% url 'home' %}">Login here</a>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const icon = btn.querySelector('i');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.remove('fa-eye');
+        icon.classList.add('fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.remove('fa-eye-slash');
+        icon.classList.add('fa-eye');
+    }
+}
+</script>
+</body>
+</html>

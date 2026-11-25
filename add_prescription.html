@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+{% block title %}Add Prescription — DentIQ{% endblock %}
+{% block page_title %}Add Prescription{% endblock %}
+
+{% block content %}
+
+<p style="color:var(--text-secondary); margin:0 0 20px 0;">
+    Visit on {{ visit.visit_date|date:"M d, Y" }} — Patient: <strong>{{ visit.patient.patient_id }}</strong>
+</p>
+
+<div class="custom-card" style="max-width:640px;">
+    <form method="POST" action="{% url 'add_prescription' visit.id %}">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">Medication</label>
+            <input type="text" name="medication" class="form-control" required placeholder="e.g. Amoxicillin">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Dose</label>
+            <input type="text" name="dose" class="form-control" placeholder="e.g. 500 mg">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Frequency</label>
+            <input type="text" name="frequency" class="form-control" placeholder="e.g. 3 times daily">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Duration</label>
+            <input type="text" name="duration" class="form-control" placeholder="e.g. 5 days">
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Instructions</label>
+            <textarea name="instructions" class="form-control" rows="2" placeholder="e.g. Take after meals"></textarea>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn-accent"><i class="fas fa-save"></i> Save Prescription</button>
+            <a href="{% url 'patient_file' visit.patient.patient_id %}" class="btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

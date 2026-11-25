@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+{% block title %}Verify Patients — DentIQ{% endblock %}
+{% block page_title %}Verify Patients{% endblock %}
+
+{% block content %}
+
+<div class="custom-card mb-4">
+    <h5 style="font-weight:700; margin-bottom:6px;">
+        <i class="fas fa-user-check" style="color:var(--accent);"></i>
+        Patient Verification Queue
+    </h5>
+    <p style="color:var(--text-secondary); font-size:0.9rem; margin:0;">
+        Only patients who have (1) submitted a verification request <strong>and</strong>
+        (2) uploaded at least one scan appear here. Review each one and click Verify
+        to grant appointment-booking privileges.
+    </p>
+</div>
+
+<!-- READY TO VERIFY -->
+<div class="custom-card mb-4">
+    <h5 style="font-weight:700; margin-bottom:16px;">
+        <i class="fas fa-hourglass-half" style="color:var(--warning);"></i>
+        Ready to Verify ({{ unverified|length }})
+    </h5>
+
+    {% if unverified %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr style="border-bottom:2px solid var(--border);">
+                    <th>Patient ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Scans</th>
+                    <th>Requested</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in unverified %}
+                <tr>
+                    <td><strong>{{ p.patient_id }}</strong></td>
+                    <td>{{ p.user.name }}</td>
+                    <td style="color:var(--text-secondary); font-size:0.9rem;">{{ p.user.email }}</td>
+                    <td><span class="role-badge">{{ p.scans_count }}</span></td>
+                    <td style="font-size:0.85rem; color:var(--text-secondary);">
+                        {{ p.verification_requested_at|date:"M d, Y H:i" }}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'verify_patient_action' p.patient_id %}" style="display:inline;"
+                              onsubmit="return confirm('Verify {{ p.patient_id }}?\n\nConfirm you have reviewed this patient\'s scans and identity.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-accent" style="font-size:0.85rem; padding:6px 16px;">
+                                <i class="fas fa-check"></i> Verify
+                            </button>
+                        </form>
+                        <a href="{% url 'patient_file' p.patient_id %}" class="btn-outline" style="font-size:0.85rem; padding:6px 16px;">
+                            <i class="fas fa-folder-open"></i> View File
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5" style="color:var(--text-secondary);">
+        <i class="fas fa-check-circle" style="font-size:3rem; opacity:0.3; color:var(--success);"></i>
+        <p class="mt-3 mb-0">No patients waiting for verification.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- WAITLIST: requested but no scans -->
+{% if waitlist %}
+<div class="custom-card mb-4">
+    <h5 style="font-weight:700; margin-bottom:16px;">
+        <i class="fas fa-clock" style="color:var(--text-secondary);"></i>
+        Waitlist — Requested but No Scans Yet ({{ waitlist|length }})
+    </h5>
+    <p style="color:var(--text-secondary); font-size:0.85rem;">
+        These patients requested verification but haven't uploaded any scans.
+        They'll appear in "Ready to Verify" once they do.
+    </p>
+    <table class="table align-middle">
+        <thead>
+            <tr style="border-bottom:2px solid var(--border);">
+                <th>Patient ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Requested</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in waitlist %}
+            <tr>
+                <td><strong>{{ p.patient_id }}</strong></td>
+                <td>{{ p.user.name }}</td>
+                <td style="color:var(--text-secondary); font-size:0.9rem;">{{ p.user.email }}</td>
+                <td style="font-size:0.85rem; color:var(--text-secondary);">
+                    {{ p.verification_requested_at|date:"M d, Y H:i" }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- VERIFIED (recent) -->
+<div class="custom-card">
+    <h5 style="font-weight:700; margin-bottom:16px;">
+        <i class="fas fa-check-circle" style="color:var(--success);"></i>
+        Recently Verified ({{ verified|length }})
+    </h5>
+
+    {% if verified %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr style="border-bottom:2px solid var(--border);">
+                    <th>Patient ID</th>
+                    <th>Name</th>
+                    <th>Verified By</th>
+                    <th>Verified At</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in verified %}
+                <tr>
+                    <td><strong>{{ p.patient_id }}</strong></td>
+                    <td>{{ p.user.name }}</td>
+                    <td style="font-size:0.9rem;">{{ p.verified_by|default:"—" }}</td>
+                    <td style="font-size:0.85rem; color:var(--text-secondary);">
+                        {{ p.verified_at|date:"M d, Y H:i" }}
+                    </td>
+                    <td>
+                        <form method="POST" action="{% url 'unverify_patient_action' p.patient_id %}" style="display:inline;"
+                              onsubmit="return confirm('Revoke verification for {{ p.patient_id }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn-outline" style="font-size:0.85rem; padding:6px 16px; color:var(--danger); border-color:var(--danger);">
+                                <i class="fas fa-times"></i> Revoke
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p style="color:var(--text-secondary); margin:0;">No verified patients yet.</p>
+    {% endif %}
+</div>
+
+{% endblock %}

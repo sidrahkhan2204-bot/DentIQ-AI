@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title %}Issue Certificate — DentIQ{% endblock %}
+{% block page_title %}Issue Medical Certificate{% endblock %}
+
+{% block content %}
+
+<p style="color:var(--text-secondary); margin:0 0 20px 0;">
+    Patient: <strong>{{ profile.patient_id }}</strong> — {{ profile.user.name }}
+</p>
+
+<div class="custom-card" style="max-width:720px;">
+    <form method="POST" action="{% url 'issue_certificate' profile.patient_id %}">
+        {% csrf_token %}
+
+        <div class="mb-3">
+            <label class="form-label">Diagnosis</label>
+            <textarea name="diagnosis" class="form-control" rows="3" required></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">Recommendation</label>
+            <textarea name="recommendation" class="form-control" rows="3"></textarea>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Rest Days</label>
+                <input type="number" name="rest_days" class="form-control" min="0" value="0">
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Valid Until</label>
+                <input type="date" name="valid_until" class="form-control">
+            </div>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn-accent"><i class="fas fa-certificate"></i> Issue Certificate</button>
+            <a href="{% url 'patient_file' profile.patient_id %}" class="btn-outline">Cancel</a>
+        </div>
+    </form>
+</div>
+
+{% endblock %}

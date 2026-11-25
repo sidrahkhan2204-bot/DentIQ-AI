@@ -1,0 +1,208 @@
+{% extends 'base.html' %}
+{% block title %}Manage Users — DentIQ{% endblock %}
+{% block page_title %}Manage Users{% endblock %}
+
+{% block content %}
+
+<!-- HEADER -->
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <div>
+        <p style="color:var(--text-secondary); margin:0;">
+            View, filter, and manage all user accounts in the system.
+        </p>
+    </div>
+    <div class="d-flex gap-2 flex-wrap">
+        <a href="{% url 'admin_dashboard' %}" class="btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Admin Panel
+        </a>
+        <a href="/admin/ai_app/user/add/" class="btn-accent" target="_blank">
+            <i class="fas fa-plus"></i> Add User (Django Admin)
+        </a>
+    </div>
+</div>
+
+<!-- ROLE FILTER TABS + SEARCH -->
+<div class="custom-card mb-4">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-3">
+        <!-- Role tabs -->
+        <div class="d-flex gap-2 flex-wrap">
+            <a href="{% url 'admin_users' %}"
+               class="btn-outline {% if not role_filter %}active{% endif %}"
+               style="{% if not role_filter %}background:var(--accent); color:#fff; border-color:var(--accent);{% endif %}">
+                <i class="fas fa-list"></i> All ({{ role_counts.patient|add:role_counts.doctor|add:role_counts.admin }})
+            </a>
+            <a href="{% url 'admin_users' %}?role=patient"
+               class="btn-outline"
+               style="{% if role_filter == 'patient' %}background:var(--accent); color:#fff; border-color:var(--accent);{% endif %}">
+                <i class="fas fa-user"></i> Patients ({{ role_counts.patient }})
+            </a>
+            <a href="{% url 'admin_users' %}?role=doctor"
+               class="btn-outline"
+               style="{% if role_filter == 'doctor' %}background:var(--accent); color:#fff; border-color:var(--accent);{% endif %}">
+                <i class="fas fa-user-md"></i> Doctors ({{ role_counts.doctor }})
+            </a>
+            <a href="{% url 'admin_users' %}?role=admin"
+               class="btn-outline"
+               style="{% if role_filter == 'admin' %}background:var(--accent); color:#fff; border-color:var(--accent);{% endif %}">
+                <i class="fas fa-shield-alt"></i> Admins ({{ role_counts.admin }})
+            </a>
+        </div>
+
+        <!-- Search -->
+        <form method="GET" action="{% url 'admin_users' %}" class="d-flex gap-2" style="min-width:260px;">
+            {% if role_filter %}
+            <input type="hidden" name="role" value="{{ role_filter }}">
+            {% endif %}
+            <input type="text" name="q" value="{{ q }}" class="form-control"
+                   placeholder="Search name or email…">
+            <button type="submit" class="btn-accent" style="padding:8px 16px;">
+                <i class="fas fa-search"></i>
+            </button>
+        </form>
+    </div>
+
+    {% if q %}
+    <p style="color:var(--text-secondary); font-size:0.85rem; margin:0;">
+        Showing results for "<strong>{{ q }}</strong>"
+        <a href="{% url 'admin_users' %}{% if role_filter %}?role={{ role_filter }}{% endif %}"
+           style="margin-left:8px; font-size:0.85rem;">
+            <i class="fas fa-times"></i> Clear
+        </a>
+    </p>
+    {% endif %}
+</div>
+
+<!-- USERS TABLE -->
+<div class="custom-card">
+    {% if rows %}
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+                <tr style="border-bottom:2px solid var(--border);">
+                    <th>ID</th>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Details</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in rows %}
+                {% with u=row.user extra=row.extra %}
+                <tr>
+                    <td><span style="color:var(--text-secondary); font-size:0.85rem;">#{{ u.id }}</span></td>
+                    <td>
+                        <strong>{{ u.name }}</strong>
+                    </td>
+                    <td style="font-size:0.9rem; color:var(--text-secondary);">
+                        {{ u.email }}
+                    </td>
+                    <td>
+                        {% if u.role == 'admin' %}
+                            <span class="badge" style="background:var(--accent); color:#fff;">Admin</span>
+                        {% elif u.role == 'doctor' %}
+                            <span class="badge" style="background:var(--success); color:#fff;">Doctor</span>
+                        {% else %}
+                            <span class="badge" style="background:var(--warning); color:#fff;">Patient</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if u.is_active %}
+                            <span class="badge bg-success">Active</span>
+                        {% else %}
+                            <span class="badge bg-danger">Deactivated</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.85rem;">
+                        {% if u.role == 'patient' %}
+                            <div style="color:var(--text-secondary);">
+                                {{ extra.patient_id }}
+                                {% if extra.is_verified %}
+                                    · <span style="color:var(--success); font-weight:600;">
+                                        <i class="fas fa-check-circle"></i> Verified
+                                      </span>
+                                {% elif extra.verification_requested %}
+                                    · <span style="color:var(--warning); font-weight:600;">
+                                        <i class="fas fa-hourglass-half"></i> Requested
+                                      </span>
+                                {% else %}
+                                    · <span style="color:var(--text-secondary);">
+                                        Unverified
+                                      </span>
+                                {% endif %}
+                                · {{ extra.scan_count }} scan{{ extra.scan_count|pluralize }}
+                            </div>
+                        {% else %}
+                            <span style="color:var(--text-secondary);">—</span>
+                        {% endif %}
+                    </td>
+                    <td style="white-space:nowrap;">
+                        <!-- Change role (inline form) -->
+                        <form method="POST" action="{% url 'admin_user_change_role' u.id %}"
+                              style="display:inline-block;">
+                            {% csrf_token %}
+                            <select name="new_role" class="form-select form-select-sm"
+                                    style="display:inline-block; width:auto; font-size:0.8rem; padding:4px 8px;"
+                                    onchange="if (confirm('Change {{ u.name }}\'s role? This may affect their access.')) { this.form.submit(); } else { this.value='{{ u.role }}'; }">
+                                <option value="patient" {% if u.role == 'patient' %}selected{% endif %}>Patient</option>
+                                <option value="doctor" {% if u.role == 'doctor' %}selected{% endif %}>Doctor</option>
+                                <option value="admin" {% if u.role == 'admin' %}selected{% endif %}>Admin</option>
+                            </select>
+                        </form>
+
+                        <!-- Deactivate / Reactivate -->
+                        <form method="POST" action="{% url 'admin_user_toggle_active' u.id %}"
+                              style="display:inline-block;">
+                            {% csrf_token %}
+                            {% if u.is_active %}
+                                <button type="submit" class="btn-outline"
+                                        style="font-size:0.8rem; padding:4px 12px; color:var(--danger); border-color:var(--danger);"
+                                        onclick="return confirm('Deactivate {{ u.name }}? They will not be able to log in.');">
+                                    <i class="fas fa-ban"></i> Deactivate
+                                </button>
+                            {% else %}
+                                <button type="submit" class="btn-outline"
+                                        style="font-size:0.8rem; padding:4px 12px; color:var(--success); border-color:var(--success);"
+                                        onclick="return confirm('Reactivate {{ u.name }}?');">
+                                    <i class="fas fa-check"></i> Reactivate
+                                </button>
+                            {% endif %}
+                        </form>
+
+                        <!-- Edit in Django Admin -->
+                        <a href="/admin/ai_app/user/{{ u.id }}/change/"
+                           class="btn-outline"
+                           style="font-size:0.8rem; padding:4px 12px;"
+                           target="_blank"
+                           title="Edit in Django Admin">
+                            <i class="fas fa-external-link-alt"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endwith %}
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5" style="color:var(--text-secondary);">
+        <i class="fas fa-users-slash" style="font-size:3rem; opacity:0.3;"></i>
+        <p class="mt-3 mb-0">No users found{% if q %} for "{{ q }}"{% endif %}.</p>
+    </div>
+    {% endif %}
+</div>
+
+<!-- FOOTER NOTE -->
+<div class="disclaimer-banner" style="margin-top:20px;">
+    <i class="fas fa-info-circle"></i>
+    <strong>Note:</strong>
+    Role changes and deactivations take effect immediately.
+    For full CRUD (add/edit/delete with all fields), use the
+    <a href="/admin/ai_app/user/" target="_blank" style="color:#0891B2; font-weight:600;">
+        Django Admin user list
+    </a>.
+</div>
+
+{% endblock %}

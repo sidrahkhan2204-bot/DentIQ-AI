@@ -1,0 +1,367 @@
+{% extends 'base.html' %}
+{% block title %}My Profile — DentIQ{% endblock %}
+{% block page_title %}My Profile{% endblock %}
+
+{% block content %}
+
+<!-- VERIFICATION STATUS -->
+{% if not profile.is_verified %}
+<div class="custom-card mb-4" style="background:#FEF3C7; border-color:#D97706;">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+        <div>
+            <h5 style="font-weight:700; margin:0 0 6px 0; color:#78350F;">
+                <i class="fas fa-clock"></i> Verification Pending
+            </h5>
+            <p style="color:#78350F; font-size:0.9rem; margin:0;">
+                {% if profile.verification_requested %}
+                    Your verification request has been submitted
+                    ({{ profile.verification_requested_at|date:"M d, Y H:i" }}).
+                    A doctor will review your account soon.
+                {% else %}
+                    To book appointments, you must first request verification.
+                    A doctor will review your scans and approve your account.
+                {% endif %}
+            </p>
+        </div>
+        {% if not profile.verification_requested %}
+        <form method="POST" action="{% url 'request_verification' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-accent">
+                <i class="fas fa-paper-plane"></i> Request Verification
+            </button>
+        </form>
+        {% endif %}
+    </div>
+</div>
+{% else %}
+<div class="custom-card mb-4" style="background:#ECFDF5; border-color:#059669;">
+    <h5 style="font-weight:700; margin:0 0 6px 0; color:#065F46;">
+        <i class="fas fa-check-circle"></i> Account Verified
+    </h5>
+    <p style="color:#065F46; font-size:0.9rem; margin:0;">
+        Verified by {{ profile.verified_by }} on {{ profile.verified_at|date:"M d, Y" }}.
+        You can book appointments.
+    </p>
+</div>
+{% endif %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <p style="color:var(--text-secondary); margin:0;">
+        Your patient record — demographics, medical history, and clinical notes.
+    </p>
+    <a href="{% url 'edit_patient_profile' %}" class="btn-accent">
+        <i class="fas fa-edit"></i> Edit Profile
+    </a>
+</div>
+
+<div class="row g-3">
+
+    <!-- DEMOGRAPHICS -->
+    <div class="col-md-6">
+        <div class="custom-card h-100">
+            <h5 style="font-weight:700; margin-bottom:16px;">
+                <i class="fas fa-id-card"></i> Demographics
+            </h5>
+            <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="user-avatar" style="width:64px; height:64px; font-size:1.5rem;">
+                    {{ user.name|first|upper }}
+                </div>
+                <div>
+                    <div style="font-weight:700; font-size:1.1rem;">{{ user.name }}</div>
+                    <div style="color:var(--text-secondary); font-size:0.9rem;">{{ user.email }}</div>
+                    <div class="role-badge" style="margin-top:6px;">Patient ID: {{ profile.patient_id }}</div>
+                </div>
+            </div>
+            <table class="table table-sm">
+                <tr><td style="color:var(--text-secondary);">Phone</td><td>{{ profile.phone|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Date of Birth</td><td>{{ profile.date_of_birth|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Gender</td><td>{{ profile.get_gender_display|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">CNIC</td><td>{{ profile.cnic|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">City</td><td>{{ profile.city|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Address</td><td>{{ profile.address|default:"—" }}</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- MEDICAL HISTORY -->
+    <div class="col-md-6">
+        <div class="custom-card h-100">
+            <h5 style="font-weight:700; margin-bottom:16px;">
+                <i class="fas fa-notes-medical"></i> Medical History
+            </h5>
+            <table class="table table-sm">
+                <tr><td style="color:var(--text-secondary);">Chronic Conditions</td><td>{{ profile.chronic_conditions|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Allergies</td><td>{{ profile.allergies|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Current Medications</td><td>{{ profile.current_medications|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Past Surgeries</td><td>{{ profile.past_surgeries|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Smoker</td><td>{% if profile.smoker %}Yes{% else %}No{% endif %}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Pregnant</td><td>{% if profile.pregnant %}Yes{% else %}No{% endif %}</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- INSURANCE & EMERGENCY -->
+    <div class="col-md-6">
+        <div class="custom-card h-100">
+            <h5 style="font-weight:700; margin-bottom:16px;">
+                <i class="fas fa-shield-alt"></i> Insurance & Emergency
+            </h5>
+            <table class="table table-sm">
+                <tr><td style="color:var(--text-secondary);">Insurance Provider</td><td>{{ profile.insurance_provider|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Insurance Number</td><td>{{ profile.insurance_number|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Emergency Contact</td><td>{{ profile.emergency_contact_name|default:"—" }}</td></tr>
+                <tr><td style="color:var(--text-secondary);">Emergency Phone</td><td>{{ profile.emergency_contact_phone|default:"—" }}</td></tr>
+            </table>
+        </div>
+    </div>
+
+    <!-- RECENT SCANS -->
+    <div class="col-md-6">
+        <div class="custom-card h-100">
+            <h5 style="font-weight:700; margin-bottom:16px;">
+                <i class="fas fa-history"></i> Recent Scans
+            </h5>
+            {% if scans %}
+            <table class="table table-sm">
+                <thead>
+                    <tr><th>Date</th><th>Detected</th><th></th></tr>
+                </thead>
+                <tbody>
+                    {% for s in scans %}
+                    <tr>
+                        <td style="font-size:0.85rem;">{{ s.timestamp|date:"M d, Y" }}</td>
+                        <td style="font-size:0.85rem;">{{ s.detected_diseases }}</td>
+                        <td><a href="{% url 'view_scan' s.id %}" class="btn-outline" style="font-size:0.75rem; padding:2px 10px;">Open</a></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:var(--text-secondary); margin:0;">No scans yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- ============ MEDICAL RECORDS (Task C) ============ -->
+
+    <!-- CLINICAL VISITS + PRESCRIPTIONS -->
+    <div class="col-12">
+        <div class="custom-card">
+            <h5 style="font-weight:700; margin-bottom:16px;">
+                <i class="fas fa-clipboard-list"></i> My Clinical Visits
+                {% if visits %}
+                <span class="role-badge" style="margin-left:8px;">{{ visits|length }}</span>
+                {% endif %}
+            </h5>
+            <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:16px;">
+                These are the visits your dentist has recorded during your consultations.
+            </p>
+
+            {% if visits %}
+                {% for v in visits %}
+                <div style="border-left:4px solid var(--accent); padding:14px 18px; margin-bottom:16px; background:var(--bg-tertiary); border-radius:0 8px 8px 0;">
+                    <div class="d-flex justify-content-between flex-wrap gap-2 mb-2">
+                        <strong style="color:var(--text-primary);">
+                            <i class="fas fa-calendar-day"></i>
+                            {{ v.visit_date|date:"M d, Y — H:i" }}
+                        </strong>
+                        <span style="color:var(--text-secondary); font-size:0.85rem;">
+                            <i class="fas fa-user-md"></i>
+                            Dr. {{ v.doctor.name|default:"—" }}
+                        </span>
+                    </div>
+
+                    {% if v.reason %}
+                    <div style="margin-top:6px;">
+                        <strong style="color:var(--text-secondary); font-size:0.85rem;">Reason:</strong>
+                        {{ v.reason }}
+                    </div>
+                    {% endif %}
+
+                    {% if v.chief_complaint %}
+                    <div style="margin-top:4px;">
+                        <strong style="color:var(--text-secondary); font-size:0.85rem;">Chief Complaint:</strong>
+                        {{ v.chief_complaint }}
+                    </div>
+                    {% endif %}
+
+                    {% if v.examination_findings %}
+                    <div style="margin-top:4px;">
+                        <strong style="color:var(--text-secondary); font-size:0.85rem;">Findings:</strong>
+                        {{ v.examination_findings }}
+                    </div>
+                    {% endif %}
+
+                    {% if v.diagnosis %}
+                    <div style="margin-top:4px;">
+                        <strong style="color:var(--text-secondary); font-size:0.85rem;">Diagnosis:</strong>
+                        {{ v.diagnosis }}
+                    </div>
+                    {% endif %}
+
+                    {% if v.treatment_plan %}
+                    <div style="margin-top:4px;">
+                        <strong style="color:var(--text-secondary); font-size:0.85rem;">Treatment Plan:</strong>
+                        {{ v.treatment_plan }}
+                    </div>
+                    {% endif %}
+
+                    {% if v.notes %}
+                    <div style="margin-top:4px;">
+                        <strong style="color:var(--text-secondary); font-size:0.85rem;">Doctor Notes:</strong>
+                        {{ v.notes }}
+                    </div>
+                    {% endif %}
+
+                    {% if v.follow_up_date %}
+                    <div style="margin-top:6px;">
+                        <strong style="color:var(--warning); font-size:0.85rem;">
+                            <i class="fas fa-calendar-check"></i> Follow-up:
+                        </strong>
+                        <span style="color:var(--warning);">{{ v.follow_up_date }}</span>
+                    </div>
+                    {% endif %}
+
+                    <!-- PRESCRIPTIONS for this visit -->
+                    {% if v.prescriptions.all %}
+                    <div style="margin-top:12px; padding:10px 14px; background:var(--bg-secondary); border-radius:6px;">
+                        <strong style="color:var(--text-primary); font-size:0.9rem;">
+                            <i class="fas fa-prescription-bottle"></i> Prescriptions
+                        </strong>
+                        <table class="table table-sm mb-0 mt-2">
+                            <thead>
+                                <tr>
+                                    <th style="font-size:0.75rem;">Medication</th>
+                                    <th style="font-size:0.75rem;">Dose</th>
+                                    <th style="font-size:0.75rem;">Frequency</th>
+                                    <th style="font-size:0.75rem;">Duration</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in v.prescriptions.all %}
+                                <tr>
+                                    <td style="font-size:0.85rem;"><strong>{{ p.medication }}</strong></td>
+                                    <td style="font-size:0.85rem;">{{ p.dose|default:"—" }}</td>
+                                    <td style="font-size:0.85rem;">{{ p.frequency|default:"—" }}</td>
+                                    <td style="font-size:0.85rem;">{{ p.duration|default:"—" }}</td>
+                                </tr>
+                                {% if p.instructions %}
+                                <tr>
+                                    <td colspan="4" style="font-size:0.8rem; color:var(--text-secondary); padding-top:0;">
+                                        <em>{{ p.instructions }}</em>
+                                    </td>
+                                </tr>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            {% else %}
+            <div class="text-center py-4" style="color:var(--text-secondary);">
+                <i class="fas fa-clipboard" style="font-size:2.5rem; opacity:0.3;"></i>
+                <p class="mt-3 mb-0">No clinical visits recorded yet.</p>
+                <p style="font-size:0.85rem; margin-top:6px;">
+                    Your dentist will add notes after each consultation.
+                </p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- MEDICAL CERTIFICATES -->
+    <div class="col-12">
+        <div class="custom-card">
+            <h5 style="font-weight:700; margin-bottom:16px;">
+                <i class="fas fa-certificate"></i> My Medical Certificates
+                {% if certificates %}
+                <span class="role-badge" style="margin-left:8px;">{{ certificates|length }}</span>
+                {% endif %}
+            </h5>
+            <p style="color:var(--text-secondary); font-size:0.9rem; margin-bottom:16px;">
+                Certificates issued by your dentist. You can download a PDF copy of any certificate.
+            </p>
+
+            {% if certificates %}
+            <div class="table-responsive">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Issued</th>
+                            <th>Doctor</th>
+                            <th>Diagnosis</th>
+                            <th>Rest Days</th>
+                            <th>Valid Until</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for c in certificates %}
+                        <tr>
+                            <td style="font-size:0.9rem;">{{ c.issued_date|date:"M d, Y" }}</td>
+                            <td style="font-size:0.9rem;">{{ c.doctor.name|default:"—" }}</td>
+                            <td style="font-size:0.9rem; max-width:260px;">{{ c.diagnosis|truncatechars:80 }}</td>
+                            <td style="font-size:0.9rem;">{{ c.rest_days }}</td>
+                            <td style="font-size:0.9rem;">{{ c.valid_until|default:"—" }}</td>
+                            <td>
+                                <a href="{% url 'download_certificate' c.id %}" class="btn-outline"
+                                   style="font-size:0.8rem; padding:4px 12px;">
+                                    <i class="fas fa-file-pdf"></i> PDF
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="text-center py-4" style="color:var(--text-secondary);">
+                <i class="fas fa-file-medical" style="font-size:2.5rem; opacity:0.3;"></i>
+                <p class="mt-3 mb-0">No certificates issued yet.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- RECENT APPOINTMENTS -->
+    <div class="col-12">
+        <div class="custom-card">
+            <h5 style="font-weight:700; margin-bottom:16px;">
+                <i class="fas fa-calendar-alt"></i> Recent Appointments
+            </h5>
+            {% if appointments %}
+            <table class="table table-sm mb-0">
+                <thead>
+                    <tr><th>Date</th><th>Doctor</th><th>Status</th></tr>
+                </thead>
+                <tbody>
+                    {% for a in appointments %}
+                    <tr>
+                        <td>{{ a.appointment_date }}</td>
+                        <td>{{ a.doctor.name }}</td>
+                        <td>
+                            {% if a.status == 'confirmed' %}
+                                <span class="badge bg-success">Confirmed</span>
+                            {% elif a.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% elif a.status == 'completed' %}
+                                <span class="badge bg-info">Completed</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:var(--text-secondary); margin:0;">No appointments yet.</p>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

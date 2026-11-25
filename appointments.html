@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+{% block title %}Appointments — DentIQ{% endblock %}
+{% block page_title %}{% if role == 'doctor' %}Incoming Appointments{% else %}My Appointments{% endif %}{% endblock %}
+
+{% block content %}
+
+{% if role == 'doctor' %}
+    <!-- ============ DOCTOR VIEW ============ -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <p style="color:var(--text-secondary); margin:0;">
+            Manage appointments booked with you. Confirm, complete, or cancel each one.
+        </p>
+        <a href="{% url 'doctor_dashboard' %}" class="btn-outline">
+            <i class="fas fa-tachometer-alt"></i> Back to Panel
+        </a>
+    </div>
+
+    <!-- RATING SUMMARY -->
+    {% if review_count %}
+    <div class="custom-card mb-4" style="background:#FEF3C7; border-color:#D97706;">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h5 style="font-weight:700; margin:0; color:#78350F;">
+                    <i class="fas fa-star"></i> Your Rating
+                </h5>
+                <p style="color:#78350F; font-size:0.9rem; margin:4px 0 0 0;">
+                    Based on {{ review_count }} patient review{{ review_count|pluralize }}
+                </p>
+            </div>
+            <div style="text-align:right;">
+                <div style="font-size:2.4rem; font-weight:800; color:#D97706; line-height:1;">
+                    {{ avg_rating }}
+                </div>
+                <div style="color:#D97706; font-size:1.1rem;">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= avg_rating %}
+                            <i class="fas fa-star"></i>
+                        {% else %}
+                            <i class="far fa-star"></i>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- RECENT REVIEWS -->
+    {% if recent_reviews %}
+    <div class="custom-card mb-4">
+        <h5 style="font-weight:700; margin-bottom:16px;">
+            <i class="fas fa-comments"></i> Recent Patient Reviews
+        </h5>
+        {% for r in recent_reviews %}
+        <div style="border-left:3px solid #D97706; background:var(--bg-tertiary); padding:12px 16px; border-radius:0 8px 8px 0; margin-bottom:10px;">
+            <div class="d-flex justify-content-between flex-wrap gap-2 mb-1">
+                <strong>{{ r.user.name }}</strong>
+                <span style="color:#D97706; font-size:0.9rem;">
+                    {% for i in "12345" %}
+                        {% if forloop.counter <= r.rating %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                    {% endfor %}
+                </span>
+            </div>
+            {% if r.comment %}
+            <p style="margin:4px 0 0 0; font-size:0.9rem; color:var(--text-primary);">
+                "{{ r.comment }}"
+            </p>
+            {% endif %}
+            <div style="font-size:0.75rem; color:var(--text-secondary); margin-top:4px;">
+                {{ r.created_at|date:"M d, Y" }}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- APPOINTMENTS TABLE -->
+    <div class="custom-card">
+        <h5 style="font-weight:700; margin-bottom:16px;">
+            <i class="fas fa-list"></i> Appointment Requests
+        </h5>
+        {% if appointments %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr style="border-bottom:2px solid var(--border);">
+                        <th>Patient</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Reason</th>
+                        <th>AI Scan</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for appt in appointments %}
+                    <tr>
+                        <td>
+                            <strong>{{ appt.patient.name }}</strong><br>
+                            <small style="color:var(--text-secondary);">
+                                {{ appt.patient.email }}
+                            </small>
+                        </td>
+                        <td>{{ appt.appointment_date }}</td>
+                        <td>{{ appt.appointment_time|default:"—" }}</td>
+                        <td style="font-size:0.9rem; color:var(--text-secondary); max-width:150px;">
+                            {{ appt.reason|default:"—" }}
+                        </td>
+                        <td>
+                            {% with scan=appt.patient.detections.first %}
+                            {% if scan %}
+                                {% if scan.detected_diseases == 'Healthy' %}
+                                    <span class="badge bg-success">Healthy</span>
+                                {% else %}
+                                    <span class="badge bg-danger">{{ scan.detected_diseases|truncatechars:25 }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span style="color:var(--text-secondary); font-size:0.8rem;">No scan</span>
+                            {% endif %}
+                            {% endwith %}
+                        </td>
+                        <td>
+                            {% if appt.status == 'confirmed' %}
+                                <span class="badge bg-success">Confirmed</span>
+                            {% elif appt.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% elif appt.status == 'completed' %}
+                                <span class="badge bg-info">Completed</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td style="white-space:nowrap;">
+                            {% if appt.status == 'pending' %}
+                            <form method="POST" action="{% url 'update_appointment_status' appt.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="confirmed">
+                                <button type="submit" class="btn-accent"
+                                        style="font-size:0.75rem; padding:4px 10px;">
+                                    <i class="fas fa-check"></i> Confirm
+                                </button>
+                            </form>
+                            <form method="POST" action="{% url 'update_appointment_status' appt.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="cancelled">
+                                <button type="submit" class="btn-outline"
+                                        style="font-size:0.75rem; padding:4px 10px; color:var(--danger); border-color:var(--danger);"
+                                        onclick="return confirm('Cancel this appointment?');">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                            {% elif appt.status == 'confirmed' %}
+                            <form method="POST" action="{% url 'update_appointment_status' appt.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="completed">
+                                <input type="hidden" name="doctor_notes" value="Appointment completed.">
+                                <button type="submit" class="btn-accent"
+                                        style="font-size:0.75rem; padding:4px 10px;">
+                                    <i class="fas fa-check-double"></i> Complete
+                                </button>
+                            </form>
+                            <form method="POST" action="{% url 'update_appointment_status' appt.id %}" style="display:inline;">
+                                {% csrf_token %}
+                                <input type="hidden" name="status" value="cancelled">
+                                <button type="submit" class="btn-outline"
+                                        style="font-size:0.75rem; padding:4px 10px; color:var(--danger); border-color:var(--danger);"
+                                        onclick="return confirm('Cancel this confirmed appointment?');">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </form>
+                            {% elif appt.status == 'completed' %}
+                            <span style="color:var(--success); font-size:0.85rem; font-weight:600;">
+                                <i class="fas fa-check-circle"></i> Done
+                            </span>
+                            {% else %}
+                            <span style="color:var(--text-secondary); font-size:0.85rem;">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if appt.doctor_notes %}
+                    <tr>
+                        <td colspan="7" style="background:var(--bg-tertiary); padding:8px 16px; font-size:0.85rem;">
+                            <strong style="color:var(--text-secondary);">Doctor Notes:</strong>
+                            {{ appt.doctor_notes }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5" style="color:var(--text-secondary);">
+            <i class="fas fa-inbox" style="font-size:3rem; opacity:0.3;"></i>
+            <p class="mt-3 mb-0">No appointments booked with you yet.</p>
+        </div>
+        {% endif %}
+    </div>
+
+{% else %}
+    <!-- ============ PATIENT VIEW ============ -->
+    <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+        <p style="color:var(--text-secondary); margin:0;">
+            View and manage your dental appointments.
+        </p>
+        <a href="{% url 'book_appointment' %}" class="btn-accent">
+            <i class="fas fa-plus-circle"></i> Book New
+        </a>
+    </div>
+
+    <div class="custom-card">
+        {% if patient_appointments %}
+        <div class="table-responsive">
+            <table class="table align-middle">
+                <thead>
+                    <tr style="border-bottom:2px solid var(--border);">
+                        <th>Doctor</th>
+                        <th>Specialization</th>
+                        <th>Date</th>
+                        <th>Time</th>
+                        <th>Status</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in patient_appointments %}
+                    {% with appt=item.obj %}
+                    <tr>
+                        <td>
+                            <strong>{{ appt.doctor.name }}</strong><br>
+                            <small style="color:var(--text-secondary);">
+                                {{ appt.doctor.email }}
+                            </small>
+                        </td>
+                        <td>{{ appt.doctor.specialization|default:"—" }}</td>
+                        <td>{{ appt.appointment_date }}</td>
+                        <td>{{ appt.appointment_time|default:"—" }}</td>
+                        <td>
+                            {% if appt.status == 'confirmed' %}
+                                <span class="badge bg-success">Confirmed</span>
+                            {% elif appt.status == 'cancelled' %}
+                                <span class="badge bg-danger">Cancelled</span>
+                            {% elif appt.status == 'completed' %}
+                                <span class="badge bg-info">Completed</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">Pending</span>
+                            {% endif %}
+                        </td>
+                        <td style="white-space:nowrap;">
+                            {% if item.reviewable %}
+                                <a href="{% url 'leave_review' appt.id %}"
+                                   class="btn-accent"
+                                   style="font-size:0.75rem; padding:5px 12px;">
+                                    <i class="fas fa-star"></i> Leave Review
+                                </a>
+                            {% elif item.review %}
+                                <span style="color:#D97706; font-size:0.9rem;">
+                                    {% for i in "12345" %}
+                                        {% if forloop.counter <= item.review.rating %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                                    {% endfor %}
+                                    <br>
+                                    <small style="color:var(--text-secondary);">You reviewed</small>
+                                </span>
+                            {% elif appt.status == 'pending' %}
+                                <form method="POST" action="{% url 'cancel_appointment_patient' appt.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-outline"
+                                            style="font-size:0.75rem; padding:5px 12px; color:var(--danger); border-color:var(--danger);"
+                                            onclick="return confirm('Cancel this appointment?');">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                </form>
+                            {% else %}
+                                <span style="color:var(--text-secondary); font-size:0.8rem;">—</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% if appt.doctor_notes %}
+                    <tr>
+                        <td colspan="6" style="background:var(--bg-tertiary); padding:8px 16px; font-size:0.85rem;">
+                            <strong style="color:var(--text-secondary);">Doctor Notes:</strong>
+                            {{ appt.doctor_notes }}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endwith %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="text-center py-5" style="color:var(--text-secondary);">
+            <i class="fas fa-calendar-times" style="font-size:3rem; opacity:0.3;"></i>
+            <p class="mt-3 mb-3">You haven't booked any appointments yet.</p>
+            <a href="{% url 'book_appointment' %}" class="btn-accent">
+                <i class="fas fa-plus-circle"></i> Book Your First Appointment
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+{% endif %}
+
+{% endblock %}

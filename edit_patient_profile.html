@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% block title %}Edit Profile — DentIQ{% endblock %}
+{% block page_title %}Edit Profile{% endblock %}
+
+{% block content %}
+
+<form method="POST" action="{% url 'edit_patient_profile' %}">
+    {% csrf_token %}
+
+    <div class="row g-3">
+
+        <div class="col-md-6">
+            <div class="custom-card">
+                <h5 style="font-weight:700; margin-bottom:16px;">
+                    <i class="fas fa-id-card"></i> Demographics
+                </h5>
+
+                <div class="mb-3">
+                    <label class="form-label">Phone</label>
+                    <input type="text" name="phone" class="form-control" value="{{ profile.phone }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Date of Birth</label>
+                    <input type="date" name="date_of_birth" class="form-control"
+                           value="{{ profile.date_of_birth|date:'Y-m-d' }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" class="form-select">
+                        <option value="">— Select —</option>
+                        <option value="M" {% if profile.gender == 'M' %}selected{% endif %}>Male</option>
+                        <option value="F" {% if profile.gender == 'F' %}selected{% endif %}>Female</option>
+                        <option value="O" {% if profile.gender == 'O' %}selected{% endif %}>Other</option>
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">CNIC</label>
+                    <input type="text" name="cnic" class="form-control" value="{{ profile.cnic }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">City</label>
+                    <input type="text" name="city" class="form-control" value="{{ profile.city }}">
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Address</label>
+                    <textarea name="address" class="form-control" rows="2">{{ profile.address }}</textarea>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-6">
+            <div class="custom-card">
+                <h5 style="font-weight:700; margin-bottom:16px;">
+                    <i class="fas fa-notes-medical"></i> Medical History
+                </h5>
+
+                <div class="mb-3">
+                    <label class="form-label">Chronic Conditions</label>
+                    <textarea name="chronic_conditions" class="form-control" rows="2"
+                              placeholder="e.g., Diabetes Type 2, Hypertension">{{ profile.chronic_conditions }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Allergies</label>
+                    <textarea name="allergies" class="form-control" rows="2"
+                              placeholder="e.g., Penicillin, Latex">{{ profile.allergies }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Current Medications</label>
+                    <textarea name="current_medications" class="form-control" rows="2">{{ profile.current_medications }}</textarea>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Past Surgeries</label>
+                    <textarea name="past_surgeries" class="form-control" rows="2">{{ profile.past_surgeries }}</textarea>
+                </div>
+
+                <div class="form-check mb-2">
+                    <input type="checkbox" name="smoker" class="form-check-input" id="smokerCheck"
+                           {% if profile.smoker %}checked{% endif %}>
+                    <label class="form-check-label" for="smokerCheck">Smoker</label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input type="checkbox" name="pregnant" class="form-check-input" id="pregnantCheck"
+                           {% if profile.pregnant %}checked{% endif %}>
+                    <label class="form-check-label" for="pregnantCheck">Pregnant</label>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12">
+            <div class="custom-card">
+                <h5 style="font-weight:700; margin-bottom:16px;">
+                    <i class="fas fa-shield-alt"></i> Insurance & Emergency Contact
+                </h5>
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Insurance Provider</label>
+                        <input type="text" name="insurance_provider" class="form-control" value="{{ profile.insurance_provider }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Insurance Number</label>
+                        <input type="text" name="insurance_number" class="form-control" value="{{ profile.insurance_number }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Emergency Contact Name</label>
+                        <input type="text" name="emergency_contact_name" class="form-control" value="{{ profile.emergency_contact_name }}">
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">Emergency Contact Phone</label>
+                        <input type="text" name="emergency_contact_phone" class="form-control" value="{{ profile.emergency_contact_phone }}">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn-accent">
+                <i class="fas fa-save"></i> Save Changes
+            </button>
+            <a href="{% url 'patient_profile' %}" class="btn-outline">Cancel</a>
+        </div>
+
+    </div>
+</form>
+
+{% endblock %}

@@ -1,0 +1,331 @@
+{% extends 'base.html' %}
+{% block title %}Model Monitoring — DentIQ{% endblock %}
+{% block page_title %}Model Monitoring{% endblock %}
+
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-3">
+    <p style="color:var(--text-secondary); margin:0;">
+        Performance and usage analytics of the DentIQ AI detection model.
+    </p>
+    <a href="{% url 'admin_dashboard' %}" class="btn-outline">
+        <i class="fas fa-arrow-left"></i> Back to Admin Panel
+    </a>
+</div>
+
+<!-- ================= MODEL INFO CARD ================= -->
+<div class="custom-card mb-4" style="border-left:4px solid var(--accent);">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="d-flex align-items-center gap-3 mb-2">
+                <div style="background:var(--accent); color:#fff; width:52px; height:52px; border-radius:12px;
+                            display:flex; align-items:center; justify-content:center; font-size:1.4rem;">
+                    <i class="fas fa-brain"></i>
+                </div>
+                <div>
+                    <h5 style="font-weight:700; margin:0;">{{ model_info.name }}</h5>
+                    <div style="color:var(--text-secondary); font-size:0.9rem;">
+                        {{ model_info.version }}
+                    </div>
+                </div>
+            </div>
+            <div style="font-size:0.9rem; color:var(--text-secondary); margin-top:10px;">
+                <div><strong>Task:</strong> {{ model_info.task }}</div>
+                <div><strong>Segmentation:</strong> {{ model_info.segmentation_task }}</div>
+                <div><strong>Device:</strong> {{ model_info.inference_device }}</div>
+                <div><strong>Confidence threshold:</strong> {{ model_info.confidence_threshold }}</div>
+            </div>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <div style="font-size:0.9rem; color:var(--text-secondary);">
+                <div><strong>Detection file:</strong> {{ model_info.detection_size_mb|default:"—" }} MB</div>
+                <div><strong>Segmentation file:</strong> {{ model_info.segmentation_size_mb|default:"—" }} MB</div>
+                <div style="margin-top:8px;">
+                    <strong>Classes (4):</strong><br>
+                    {% for c in model_info.classes %}
+                        <span class="badge" style="background:var(--accent); color:#fff; margin-right:4px; margin-top:4px;">
+                            {{ c }}
+                        </span>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= SUMMARY STATS ================= -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="custom-card text-center">
+            <i class="fas fa-microscope" style="font-size:1.8rem; color:var(--accent);"></i>
+            <div style="font-size:2.2rem; font-weight:800; margin-top:8px;">{{ total_scans }}</div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">Total Inferences</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="custom-card text-center">
+            <i class="fas fa-users" style="font-size:1.8rem; color:var(--success);"></i>
+            <div style="font-size:2.2rem; font-weight:800; margin-top:8px;">{{ total_users_with_scans }}</div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">Users Who Scanned</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="custom-card text-center">
+            <i class="fas fa-check-circle" style="font-size:1.8rem; color:var(--success);"></i>
+            <div style="font-size:2.2rem; font-weight:800; margin-top:8px;">{{ healthy_count }}</div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">Healthy Scans</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="custom-card text-center">
+            <i class="fas fa-exclamation-triangle" style="font-size:1.8rem; color:var(--danger);"></i>
+            <div style="font-size:2.2rem; font-weight:800; margin-top:8px;">{{ abnormal_count }}</div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">Abnormal Scans</div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= CONFIDENCE STATS ================= -->
+<div class="custom-card mb-4">
+    <h6 style="font-weight:700; margin-bottom:16px;">
+        <i class="fas fa-chart-line" style="color:var(--accent);"></i> Confidence Statistics
+        <span style="color:var(--text-secondary); font-weight:400; font-size:0.85rem;">
+            ({{ confidence_stats.total_detections }} individual detections)
+        </span>
+    </h6>
+
+    <div class="row g-3">
+        <div class="col-md-3">
+            <div style="text-align:center; padding:16px; background:var(--bg-tertiary); border-radius:10px;">
+                <div style="font-size:2.2rem; font-weight:800; color:var(--accent);">{{ confidence_stats.avg }}%</div>
+                <div style="color:var(--text-secondary); font-size:0.85rem;">Average Confidence</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="text-align:center; padding:16px; background:#FEF2F2; border-radius:10px;">
+                <div style="font-size:2.2rem; font-weight:800; color:#DC2626;">{{ confidence_stats.min }}%</div>
+                <div style="color:var(--text-secondary); font-size:0.85rem;">Minimum</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="text-align:center; padding:16px; background:#ECFDF5; border-radius:10px;">
+                <div style="font-size:2.2rem; font-weight:800; color:#059669;">{{ confidence_stats.max }}%</div>
+                <div style="color:var(--text-secondary); font-size:0.85rem;">Maximum</div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div style="text-align:center; padding:16px; background:var(--bg-tertiary); border-radius:10px;">
+                <div style="font-size:2.2rem; font-weight:800; color:var(--text-primary);">{{ confidence_stats.total_detections }}</div>
+                <div style="color:var(--text-secondary); font-size:0.85rem;">Total Detections</div>
+            </div>
+        </div>
+    </div>
+
+    <hr style="border-color:var(--border); margin:20px 0;">
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.9rem;">
+                <span style="color:#059669; font-weight:600;">
+                    <i class="fas fa-circle" style="font-size:0.5rem;"></i> High (≥75%)
+                </span>
+                <span><strong>{{ confidence_stats.high }}</strong></span>
+            </div>
+            <div style="height:8px; background:var(--bg-tertiary); border-radius:4px; overflow:hidden;">
+                {% if confidence_stats.total_detections %}
+                <div style="height:100%; width:{% widthratio confidence_stats.high confidence_stats.total_detections 100 %}%;
+                            background:#059669; border-radius:4px;"></div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.9rem;">
+                <span style="color:#D97706; font-weight:600;">
+                    <i class="fas fa-circle" style="font-size:0.5rem;"></i> Moderate (50–74%)
+                </span>
+                <span><strong>{{ confidence_stats.moderate }}</strong></span>
+            </div>
+            <div style="height:8px; background:var(--bg-tertiary); border-radius:4px; overflow:hidden;">
+                {% if confidence_stats.total_detections %}
+                <div style="height:100%; width:{% widthratio confidence_stats.moderate confidence_stats.total_detections 100 %}%;
+                            background:#D97706; border-radius:4px;"></div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.9rem;">
+                <span style="color:#DC2626; font-weight:600;">
+                    <i class="fas fa-circle" style="font-size:0.5rem;"></i> Low (&lt;50%)
+                </span>
+                <span><strong>{{ confidence_stats.low }}</strong></span>
+            </div>
+            <div style="height:8px; background:var(--bg-tertiary); border-radius:4px; overflow:hidden;">
+                {% if confidence_stats.total_detections %}
+                <div style="height:100%; width:{% widthratio confidence_stats.low confidence_stats.total_detections 100 %}%;
+                            background:#DC2626; border-radius:4px;"></div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= DISEASE DISTRIBUTION ================= -->
+<div class="custom-card mb-4">
+    <h6 style="font-weight:700; margin-bottom:16px;">
+        <i class="fas fa-chart-bar" style="color:var(--accent);"></i> Detection Distribution
+        <span style="color:var(--text-secondary); font-weight:400; font-size:0.85rem;">
+            (across {{ total_scans }} scans)
+        </span>
+    </h6>
+
+    {% for d in disease_distribution %}
+    <div style="margin-bottom:14px;">
+        <div style="display:flex; justify-content:space-between; margin-bottom:6px; font-size:0.9rem;">
+            <span style="font-weight:600;">
+                {% if d.label == 'Healthy' %}
+                    <i class="fas fa-check-circle" style="color:var(--success);"></i>
+                {% elif d.label == 'Caries / Discoloration' %}
+                    <i class="fas fa-tooth" style="color:#DC2626;"></i>
+                {% elif d.label == 'Calculus' %}
+                    <i class="fas fa-brush" style="color:#D97706;"></i>
+                {% elif d.label == 'Hypodontia' %}
+                    <i class="fas fa-teeth" style="color:#D97706;"></i>
+                {% else %}
+                    <i class="fas fa-circle" style="color:var(--text-secondary);"></i>
+                {% endif %}
+                {{ d.label }}
+            </span>
+            <span style="color:var(--text-secondary);">
+                <strong>{{ d.count }}</strong> scans ({{ d.pct }}%)
+            </span>
+        </div>
+        <div style="height:10px; background:var(--bg-tertiary); border-radius:5px; overflow:hidden;">
+            <div style="height:100%; width:{{ d.pct }}%;
+                        {% if d.label == 'Healthy' %}
+                            background:linear-gradient(90deg, #059669, #10B981);
+                        {% elif d.label == 'Caries / Discoloration' %}
+                            background:linear-gradient(90deg, #DC2626, #EF4444);
+                        {% elif d.label == 'Calculus' %}
+                            background:linear-gradient(90deg, #D97706, #F59E0B);
+                        {% elif d.label == 'Hypodontia' %}
+                            background:linear-gradient(90deg, #0891B2, #06B6D4);
+                        {% else %}
+                            background:linear-gradient(90deg, #64748B, #94A3B8);
+                        {% endif %}
+                        border-radius:5px;"></div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- ================= ACTIVITY ================= -->
+<div class="row g-3 mb-4">
+    <div class="col-md-6">
+        <div class="custom-card text-center h-100">
+            <i class="fas fa-calendar-week" style="font-size:1.8rem; color:var(--accent);"></i>
+            <div style="font-size:2.4rem; font-weight:800; margin-top:8px; color:var(--accent);">
+                {{ scans_last_7_days }}
+            </div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">
+                Scans in Last 7 Days
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="custom-card text-center h-100">
+            <i class="fas fa-calendar-alt" style="font-size:1.8rem; color:var(--success);"></i>
+            <div style="font-size:2.4rem; font-weight:800; margin-top:8px; color:var(--success);">
+                {{ scans_last_30_days }}
+            </div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">
+                Scans in Last 30 Days
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ================= TOP PATIENTS ================= -->
+{% if top_patients %}
+<div class="custom-card mb-4">
+    <h6 style="font-weight:700; margin-bottom:16px;">
+        <i class="fas fa-trophy" style="color:#D97706;"></i> Top Patients by Scan Count
+    </h6>
+    <table class="table table-sm mb-0">
+        <thead>
+            <tr>
+                <th>#</th>
+                <th>Patient</th>
+                <th>Email</th>
+                <th style="text-align:right;">Scans</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for p in top_patients %}
+            <tr>
+                <td><strong>{{ forloop.counter }}</strong></td>
+                <td>{{ p.name }}</td>
+                <td style="color:var(--text-secondary); font-size:0.9rem;">{{ p.email }}</td>
+                <td style="text-align:right;"><span class="role-badge">{{ p.scans }}</span></td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
+
+<!-- ================= RECENT SCANS ================= -->
+<div class="custom-card">
+    <h6 style="font-weight:700; margin-bottom:16px;">
+        <i class="fas fa-clock" style="color:var(--accent);"></i> Recent Inferences (Last 10)
+    </h6>
+    {% if recent_scans %}
+    <div class="table-responsive">
+        <table class="table align-middle mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Date</th>
+                    <th>User</th>
+                    <th>Detected</th>
+                    <th>Confidence</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for scan in recent_scans %}
+                <tr>
+                    <td style="color:var(--text-secondary); font-size:0.85rem;">#{{ scan.id }}</td>
+                    <td style="font-size:0.9rem;">{{ scan.timestamp|date:"M d, Y H:i" }}</td>
+                    <td style="font-size:0.9rem;">
+                        {{ scan.user.name|default:"—" }}<br>
+                        <small style="color:var(--text-secondary);">{{ scan.user.email|default:"—" }}</small>
+                    </td>
+                    <td>
+                        {% if scan.detected_diseases == 'Healthy' %}
+                            <span class="badge bg-success">Healthy</span>
+                        {% else %}
+                            <span class="badge bg-danger">{{ scan.detected_diseases|truncatechars:40 }}</span>
+                        {% endif %}
+                    </td>
+                    <td style="font-size:0.85rem; color:var(--text-secondary); max-width:180px;">
+                        {{ scan.confidence_scores|truncatechars:60|default:"—" }}
+                    </td>
+                    <td>
+                        <a href="{% url 'view_scan' scan.id %}" class="btn-outline" style="font-size:0.8rem; padding:3px 10px;">
+                            <i class="fas fa-eye"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="text-center py-5" style="color:var(--text-secondary);">
+        <i class="fas fa-database" style="font-size:3rem; opacity:0.3;"></i>
+        <p class="mt-3 mb-0">No inferences yet. Upload a scan to see data here.</p>
+    </div>
+    {% endif %}
+</div>
+
+{% endblock %}

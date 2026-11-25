@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block title %}Leave Review — DentIQ{% endblock %}
+{% block page_title %}Leave a Review{% endblock %}
+
+{% block content %}
+
+<p style="color:var(--text-secondary); margin:0 0 20px 0;">
+    Rate your experience with <strong>{{ doctor.name }}</strong>
+    ({{ doctor.specialization|default:"General Dentistry" }}).
+</p>
+
+<div class="custom-card" style="max-width:640px;">
+
+    <div class="d-flex align-items-center gap-3 mb-4 pb-4"
+         style="border-bottom:1px solid var(--border);">
+        <div class="user-avatar" style="width:64px; height:64px; font-size:1.5rem;">
+            {{ doctor.name|first|upper }}
+        </div>
+        <div>
+            <div style="font-weight:700; font-size:1.1rem;">{{ doctor.name }}</div>
+            <div style="color:var(--text-secondary); font-size:0.9rem;">
+                {{ doctor.specialization|default:"Dentist" }}
+            </div>
+            <div style="color:var(--text-secondary); font-size:0.85rem; margin-top:4px;">
+                <i class="fas fa-calendar-check"></i>
+                Appointment on {{ appt.appointment_date }}
+                {% if appt.appointment_time %}at {{ appt.appointment_time }}{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <form method="POST" action="{% url 'leave_review' appt.id %}">
+        {% csrf_token %}
+
+        <!-- STAR RATING -->
+        <div class="mb-4">
+            <label class="form-label" style="font-weight:600; display:block; margin-bottom:12px;">
+                Your Rating <span style="color:var(--danger);">*</span>
+            </label>
+            <div id="starRow" style="display:flex; gap:8px; font-size:2.2rem; cursor:pointer;">
+                <i class="far fa-star" data-value="1" style="color:#D97706;"></i>
+                <i class="far fa-star" data-value="2" style="color:#D97706;"></i>
+                <i class="far fa-star" data-value="3" style="color:#D97706;"></i>
+                <i class="far fa-star" data-value="4" style="color:#D97706;"></i>
+                <i class="far fa-star" data-value="5" style="color:#D97706;"></i>
+            </div>
+            <input type="hidden" name="rating" id="ratingInput" value="0" required>
+            <div id="ratingLabel" style="margin-top:8px; font-size:0.9rem; color:var(--text-secondary);">
+                Click a star to rate
+            </div>
+        </div>
+
+        <!-- COMMENT -->
+        <div class="mb-4">
+            <label class="form-label" style="font-weight:600;">
+                Comment <span style="color:var(--text-secondary); font-weight:400;">(optional)</span>
+            </label>
+            <textarea name="comment" class="form-control" rows="4"
+                      placeholder="Share your experience with this doctor…"
+                      maxlength="500"></textarea>
+            <small style="color:var(--text-secondary); font-size:0.8rem;">
+                Max 500 characters.
+            </small>
+        </div>
+
+        <div class="d-flex gap-2 mt-4">
+            <button type="submit" class="btn-accent" id="submitBtn" disabled
+                    style="opacity:0.5; cursor:not-allowed;">
+                <i class="fas fa-paper-plane"></i> Submit Review
+            </button>
+            <a href="{% url 'appointments' %}" class="btn-outline">Cancel</a>
+        </div>
+    </form>
+
+</div>
+
+<script>
+const starRow = document.getElementById('starRow');
+const stars = starRow.querySelectorAll('i');
+const ratingInput = document.getElementById('ratingInput');
+const ratingLabel = document.getElementById('ratingLabel');
+const submitBtn = document.getElementById('submitBtn');
+
+const LABELS = {
+    1: "Poor — would not recommend",
+    2: "Fair — below expectations",
+    3: "Good — satisfactory",
+    4: "Very Good — would recommend",
+    5: "Excellent — highly recommend"
+};
+
+let currentRating = 0;
+let hoverRating = 0;
+
+function renderStars() {
+    const active = hoverRating || currentRating;
+    stars.forEach((s, idx) => {
+        const val = idx + 1;
+        if (val <= active) {
+            s.classList.remove('far');
+            s.classList.add('fas');
+        } else {
+            s.classList.remove('fas');
+            s.classList.add('far');
+        }
+    });
+}
+
+stars.forEach(star => {
+    star.addEventListener('mouseenter', () => {
+        hoverRating = parseInt(star.dataset.value);
+        renderStars();
+    });
+    star.addEventListener('mouseleave', () => {
+        hoverRating = 0;
+        renderStars();
+    });
+    star.addEventListener('click', () => {
+        currentRating = parseInt(star.dataset.value);
+        ratingInput.value = currentRating;
+        ratingLabel.textContent = LABELS[currentRating];
+        ratingLabel.style.color = '#059669';
+        ratingLabel.style.fontWeight = '600';
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        submitBtn.style.cursor = 'pointer';
+        renderStars();
+    });
+});
+</script>
+
+{% endblock %}
