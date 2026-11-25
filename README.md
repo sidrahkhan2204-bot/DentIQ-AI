@@ -96,7 +96,9 @@ On Linux or Mac: source venv/bin/activate
 pip install -r requirements.txt
 
 3. Download model weights
-The model weights (.pt files) are too large for GitHub. Please open an Issue on this GitHub repository to request access to the model weights. Once received, place the .pt files in a new folder named "models" in the root of your project.
+The model weights (.pt files) are too large for GitHub. Download them from the links below and place them in a new folder named "models" in the root of your project.
+- Detection model (detect_augmented_final.pt): https://drive.google.com/file/d/1hH7mpA2EPRo8WHxNvIXEh5RzSyyoLtDX/view?usp=sharing
+- Segmentation model (seg_augmented_final.pt): https://drive.google.com/file/d/1SlJ1ZBCfI9vU0HbpyTgZ3_OwJoZHMOF1/view?usp=sharing
 
 4. Create media directories
 mkdir -p media/uploads media/patient_docs media/reports media/runs/seg
