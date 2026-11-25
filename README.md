@@ -8,7 +8,6 @@ Department of Computer Science and IT, University of Southern Punjab, Multan.
 Team: Anum Bibi (BSIT-023R22P-05), Sidra (BSIT-023R22P-22), Narjis Fatima (BSIT-023R22P-25)
 Supervisor: Sir Zohair Haider
 
-
 OVERVIEW
 ========================================
 Dental caries affects approximately 2.5 billion people globally, and in Pakistan, prevalence reaches 97.7% among school adolescents. Yet no widely accessible screening tool exists for patients or small clinics.
@@ -20,7 +19,6 @@ DentIQ addresses this gap:
 
 The system runs on CPU only (2 to 5 seconds per image), making it deployable in low-resource settings.
 
-========================================
 KEY FEATURES
 ========================================
 AI Pipeline:
@@ -42,7 +40,6 @@ Operational Infrastructure:
 - Model monitoring dashboard: Per-class detection distribution, confidence statistics, activity timeline.
 - Role-based dashboards: Separate interfaces for patients, doctors, and administrators.
 
-========================================
 MODEL PERFORMANCE
 ========================================
 Evaluated on a 906-image validation set:
@@ -64,7 +61,6 @@ Precision: 0.780, Recall: 0.766, mAP@0.5: 0.816, mAP@0.5: 0.95: 0.428
 
 Training configuration: YOLOv8s, 30 epochs (early stopping), batch 16, 640x640, AdamW, Google Colab T4 GPU, train-validation loss gap +0.15 (no significant overfitting).
 
-========================================
 TECH STACK
 ========================================
 Backend: Django 5.2
@@ -80,7 +76,6 @@ PDF Generation: ReportLab 3.6+
 Database: SQLite
 Frontend: Bootstrap 5.3
 
-========================================
 INSTALLATION
 ========================================
 Prerequisites:
@@ -113,7 +108,6 @@ python manage.py runserver
 
 Navigate to http://127.0.0.1:8000/ in your browser.
 
-========================================
 PROJECT STRUCTURE
 ========================================
 DentiQ-AI/
